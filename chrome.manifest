@@ -1,0 +1,5 @@
+content	zotero-offline-scan				chrome/content/zotero-offline-scan/
+locale	zotero-offline-scan	en-US		chrome/locale/en-US/zotero-offline-scan/
+skin	zotero-offline-scan	default		chrome/skin/default/zotero-offline-scan/
+
+overlay	chrome://zotero/content/zoteroPane.xul	chrome://zotero-offline-scan/content/overlay.xul
