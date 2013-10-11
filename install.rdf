@@ -3,12 +3,12 @@
 		xmlns:em="http://www.mozilla.org/2004/em-rdf#">
 	
 	<Description about="urn:mozilla:install-manifest">
-		<em:id>offline-scan@iris-advies.com</em:id>
-		<em:name>Offline Scan Plugin for Zotero</em:name>
+		<em:id>offline-index@iris-advies.com</em:id>
+		<em:name>Offline Index Plugin for Zotero</em:name>
 		<em:version>0.0.1</em:version>
 		<em:description>A sample plugin for Zotero</em:description>
 		<em:creator>Center for History and New Media<br/>George Mason University</em:creator>
-		<em:updateUrl>https://raw.github.com/friflaj/zotero-offline-scan/master/update.rdf</em:updateUrl>
+		<em:updateUrl>https://raw.github.com/friflaj/zotero-offline-index/master/update.rdf</em:updateUrl>
 		<em:type>2</em:type> <!-- type=extension -->
 		
 		<!-- Requires Zotero -->

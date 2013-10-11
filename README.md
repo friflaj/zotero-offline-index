@@ -1,2 +1,2 @@
-zotero-offline-scan
+zotero-offline-index
 ===================

@@ -10,7 +10,7 @@ zotero.xpi: FORCE
 	#zip -r $@ chrome chrome.manifest defaults install.rdf
 	zip -r $@ chrome chrome.manifest install.rdf resources bootstrap.js
 
-zotero-offline-scan-%.xpi: zotero.xpi
+zotero-offline-index-%.xpi: zotero.xpi
 	rm -f zotero-*.xpi
 	mv $< $@
 	xsltproc -stringparam xpi $@ update.xsl install.rdf > update.rdf
@@ -21,6 +21,6 @@ publish:
 	git push
 
 Makefile.in: install.rdf
-	echo "all: zotero-offline-scan-${RELEASE}.xpi" > Makefile.in
+	echo "all: zotero-offline-index-${RELEASE}.xpi" > Makefile.in
 
 FORCE:

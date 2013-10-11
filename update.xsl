@@ -30,9 +30,9 @@
                       <em:maxVersion><xsl:value-of select="RDF:Description/em:maxVersion"/></em:maxVersion>
                     </xsl:if>
 
-                    <em:updateLink>https://raw.github.com/friflaj/zotero-offline-scan/master/<xsl:value-of select="$xpi"/></em:updateLink>
+                    <em:updateLink>https://raw.github.com/friflaj/zotero-offline-index/master/<xsl:value-of select="$xpi"/></em:updateLink>
 
-                    <em:updateInfoURL>https://github.com/friflaj/zotero-offline-scan</em:updateInfoURL>
+                    <em:updateInfoURL>https://github.com/friflaj/zotero-offline-index</em:updateInfoURL>
                   </RDF:Description>
                 </em:targetApplication>
               </xsl:for-each>
