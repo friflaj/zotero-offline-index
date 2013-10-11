@@ -1,18 +1,26 @@
 Zotero.OfflineIndex = {
+  DB: null,
+  DBNAME: 'zotero-offline-index.sqlite',
+
   init: function () {
+    this.DB = new Zotero.DBConnection(this.DBNAME);
+    this.DB.query('PRAGMA temp_store = MEMORY');
+    this.DB.query('CREATE TABLE IF NOT EXISTS status (itemID NOT NULL, attachmentHash NOT NULL)');
+    this.DB.query('CREATE TEMP TABLE IF NOT EXISTS fulltextwords (words NOT NULL, length NOT NULL)');
+    Zotero.DB.query('ATTACH ' + this.DBNAME + ' AS offlineindex');
+
     function getOfflineData()
     {
       if (!Zotero.Prefs.get("sync.storage.enabled") || Zotero.Prefs.get("sync.storage.protocol") != 'webdav') { return; }
 
-      Zotero.DB.query("CREATE TEMPORARY TABLE IF NOT EXISTS fulltextimport (word, chars)");
-      Zotero.DB.query("DELETE FROM fulltextimport");
+      Zotero.DB.query("DELETE FROM offlineindex.fulltextimport");
 
       var scheme = Zotero.Prefs.get('sync.storage.scheme');
       var urlRoot = scheme + '://' + Zotero.Prefs.get('sync.storage.url') + '/zotero/.';
       var username = Zotero.Sync.Storage.WebDAV._username;
       var password = Zotero.Sync.Storage.WebDAV._password;
 
-      var status = null;
+      var remote = null;
 
       try {
         var url = urlRoot + 'offline.txt';
@@ -24,22 +32,24 @@ Zotero.OfflineIndex = {
           Zotero.debug('Could not fetch ' + url + ': ' + request.status);
           return;
         }
-        status = JSON.parse(request.responseText);
+        remote = JSON.parse(request.responseText);
       } catch (err) {
           Zotero.debug('Could not fetch ' + url + ': ' + err);
           return;
       }
 
-      var hashes = {}
-      var rows = Zotero.DB.query('select items.key, fulltextItems.attachmentHash from items join fulltextItems on items.itemID = fulltextItems.itemID where attachmentHash is not null');
+      var local = {}
+      var rows = Zotero.DB.query('select items.key, offlineindex.status.attachmentHash from items join offlineindex.status on items.itemID = offlineindex.status.itemID');
       for each(var row in rows) {
-        hashes[row[0]] = row[1];
+        local[row[0]] = row[1];
       }
 
       for each(var item in Zotero.Items.getAll()) {
-        if (!status[item.key] || status[item.key] == hashes[item.key] || !item.isAttachment()) { continue; }
+        if (!remote[item.key] || remote[item.key] == local[item.key] || !item.isAttachment()) { continue; }
 
-        Zotero.DB.query("REPLACE INTO fulltextItems (itemID, version, attachmentHash) VALUES (?,?,NULL)", [item.id, 1]);
+        Zotero.DB.beginTransaction();
+
+        Zotero.DB.query("delete from offlineindex.status where itemID = ?", [item.id]);
 
         var url = urlRoot + item.key + '.offline.txt';
         Zotero.debug('Fetching: ' + url);
@@ -60,7 +70,8 @@ Zotero.OfflineIndex = {
           continue;
         }
 
-        Zotero.DB.query("UPDATE fulltextItems set attachmentHash = ? where itemID = ?", [status[item.key], item.id]);
+        Zotero.DB.query("INSERT INTO offlineindex.status (itemID, attachmentHash) VALUES (?, ?)", [item.id, remote[item.key]]);
+        Zotero.DB.commitTransaction();
       }
     }
 
