@@ -59,10 +59,7 @@ class Scanner
   end
 
   def text2words(text)
-    text = text.strip.split(/[^[:alpha:]]+/)
-    text = text.collect{|w| w.downcase}.uniq.reject{|w| w.length < 2}
-    chars = 0
-    return Hash[*(text.collect{|w| l = w.length; chars += l; [w, l]}.flatten)]
+    return text.strip.split(/[^[:alpha:]]+/).collect{|w| w.downcase}.uniq.reject{|w| w.length < 2}
   end
 
   def initialize(root)
