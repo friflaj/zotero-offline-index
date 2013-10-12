@@ -4,7 +4,7 @@ require 'nokogiri'
 EXTENSION_ID = Nokogiri::XML(File.open('install.rdf')).xpath('//em:id').inner_text
 EXTENSION = EXTENSION_ID.gsub(/@.*/, '')
 RELEASE = Nokogiri::XML(File.open('install.rdf')).xpath('//em:version').inner_text
-SOURCES = (Dir['chrome/**/*'] + Dir['resources/**/*'] + %w{chrome.manifest install.rdf bootstrap.js}).select{|f| File.file?(f)}
+SOURCES = %w{chrome resources chrome.manifest install.rdf bootstrap.js}.collect{|f| File.directory?(f) ? Dir["#{f}/**/*"] : f}.flatten.select{|f| File.file?(f)}
 XPI = "zotero-#{EXTENSION}-#{RELEASE}.xpi"
 
 task :default => XPI do
@@ -16,7 +16,7 @@ file XPI => SOURCES do
   sh "zip -r #{XPI} #{sources}"
 end
 
-file 'update.rdf' => XPI do
+file 'update.rdf' => [XPI, 'install.rdf'] do
   update_rdf = Nokogiri::XML(File.open('update.rdf'))
   update_rdf.at('//em:version').content = RELEASE
   update_rdf.at('//RDF:Description')['about'] = "urn:mozilla:extension:#{EXTENSION_ID}"
