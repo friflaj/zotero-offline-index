@@ -30,3 +30,22 @@ task :publish => [XPI, 'update.rdf'] do
   sh "git commit -am #{RELEASE}"
   sh "git push"
 end
+
+task :release, :bump do |t, args|
+  bump = args[:bump] || 'patch'
+
+  release = RELEASE.split('.').collect{|n| Integer(n)}
+  release = case bump
+            when 'major' then [release[0] + 1, 0, 0]
+            when 'minor' then [release[0], release[1] + 1, 0]
+            when 'patch' then [release[0], release[1], release[2] + 1]
+            else raise "Unexpected release increase #{bump.inspect}"
+            end
+  release = release.collect{|n| n.to_s}.join('.')
+
+  install_rdf = Nokogiri::XML(File.open('install.rdf'))
+  install_rdf.at('//em:version').content = release
+  install_rdf.at('//em:updateUrl').content = "https://raw.github.com/friflaj/zotero-#{EXTENSION}/master/update.rdf"
+  File.open('install.rdf','wb') {|f| install_rdf.write_xml_to f}
+  puts "Release set to #{release}. Please publish."
+end
