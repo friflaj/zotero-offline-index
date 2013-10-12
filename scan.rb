@@ -1,6 +1,7 @@
 #!/usr/bin/env ruby
 
 require 'json'
+require 'yaml'
 require 'zip/zipfilesystem'
 require 'tempfile'
 require 'pp'
@@ -31,11 +32,11 @@ class Scanner
   def tika(stream, mimetype, size)
     req = Net::HTTP::Put.new('/all')
     req.body_stream = stream
-    req["Content-Type"] = mimetype
+    #req["Content-Type"] = mimetype
     req.add_field('Content-Length', size)
     req.add_field('Accept', 'application/x-tar')
     res = TIKA.request(req)
-
+    
     data = {html: ''}
 
     tar_extract = Gem::Package::TarReader.new(StringIO.new(res.body))
@@ -78,16 +79,15 @@ class Scanner
     extensions = []
     hashes = {}
     errors = []
-    Dir[File.join(root, '*.zip')].sort.each{|zipfile|
-      puts zipfile
+    Dir[File.join(root, '*.zip')].sort.reverse.each{|zipfile|
+      key = File.basename(zipfile, File.extname(zipfile)).upcase
+      puts key
 
       propfile = File.join(File.dirname(zipfile), File.basename(zipfile, File.extname(zipfile)) + '.prop')
 
       hash = nil
       File.open(propfile){|f| hash = Nokogiri::XML(f).xpath('/properties/hash').inner_text }
       hash = nil if hash == ''
-
-      key = File.basename(zipfile, File.extname(zipfile)).upcase
 
       hashes[key] = hash if hash
 
@@ -108,8 +108,20 @@ class Scanner
           when '.txt'
             data = {text: entry.get_input_stream.read}
           when '.html'
-            data = {html: entry.get_input_stream.read}
-          when '.pdf', '.epub', '.mobi', '.doc', '.docx'
+            data[:html] ||= ''
+            data[:html] += ' ' + entry.get_input_stream.read
+          when '.epub'
+            # Tika doesn't always pick up epub contents
+            data[:html] ||= ''
+            Tempfile.open('epub') do |f|
+              entry.extract(f.path){true}
+              Zip::ZipFile.foreach(f.path){|chapter|
+                next unless chapter.file?
+                next unless chapter.to_s.downcase =~ /\.html?$/ || (chapter.to_s.downcase =~ /oebps\/text/ && chapter.to_s.downcase =~ /\.xml$/)
+                data[:html] += ' ' + chapter.get_input_stream.read
+              }
+            end
+          when '.pdf', '.mobi', '.doc', '.docx'
             raise "No mimetype for #{ext}" unless EXT2MIMETYPE[ext]
             data = tika(entry.get_input_stream, EXT2MIMETYPE[ext], entry.size)
           else
@@ -133,7 +145,7 @@ class Scanner
     }
 
     File.open(File.join(root, EXT), "wb", :encoding => 'utf-8'){|f| f.write(hashes.to_json) }
-    File.open(File.join(root, EXT + '.error'), "wb", :encoding => 'utf-8'){|f| f.write(errors.to_json) }
+    File.open(File.join(root, EXT + '.error'), "wb", :encoding => 'utf-8'){|f| f.write(errors.to_yaml) }
   end
 end
 
