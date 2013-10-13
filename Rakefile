@@ -30,7 +30,7 @@ file 'update.rdf' => [XPI, 'install.rdf'] do
 end
 
 task :publish => [XPI, 'update.rdf'] do
-  sh "git add ."
+  sh "git add --all ."
   sh "git commit -am #{RELEASE}"
   sh "git push"
 end
