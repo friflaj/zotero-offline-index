@@ -4,7 +4,7 @@
 	<Description about="urn:mozilla:install-manifest">
 		<em:id>offline-index@iris-advies.com</em:id>
 		<em:name>Zotero Offline Index Plugin</em:name>
-		<em:version>0.0.8</em:version>
+		<em:version>0.0.9</em:version>
 		<em:description>This plugin fetches pre-calculated indexes from your webdav storage. See associated sample scanner
             from the <a href="https://github.com/friflaj/zotero-offline-index/">project page</a> to generate the
             indexes.
@@ -22,6 +22,7 @@
               <li>setup: offline scanner script requires Ruby, Java and apache Tika
             </li>
             </li>
+    </ul>
 		<em:creator>Emiliano Heyns</em:creator>
 		<em:updateURL>https://raw.github.com/friflaj/zotero-offline-index/master/update.rdf</em:updateURL>
 		<em:type>2</em:type> <!-- type=extension -->
@@ -52,6 +53,6 @@
 				<em:maxVersion>4.0.*</em:maxVersion>
 			</Description>
 		</em:targetApplication>
-	</ul>
+	</li>
 </li>
-</li></li></li></li></li></li></ul></em:description></Description></RDF>
+</li></li></li></li></li></ul></em:description></Description></RDF>
