@@ -12,7 +12,10 @@ require 'net/http'
 require 'nokogiri'
 require 'rubygems/package'
 require 'csv'
+require 'stringex'
+require 'unicode_utils/downcase'
 
+RELEASE = Nokogiri::XML(File.open(File.join(File.dirname(__FILE__), 'install.rdf'))).xpath('//em:version').inner_text
 TIKA = Net::HTTP.new('localhost', 9998)
 
 OPTS = Trollop::options do
@@ -58,34 +61,58 @@ class Scanner
     return data
   end
 
+  def to_ascii(w)
+    @toascii ||= {}
+    @toascii[w] ||= w.to_ascii.downcase.gsub(/[^a-z]/, '')
+    return @toascii[w]
+  end
+
   def text2words(text)
-    return text.strip.split(/[^[:alpha:]]+/).collect{|w| w.downcase}.uniq.reject{|w| w.length < 2}
+    return text.strip.scan(/[[:alpha:]]{2,}/).collect{|w| w = UnicodeUtils.downcase(w); [w, to_ascii(w)] }.flatten.compact.uniq
+  end
+
+  def cachefile(key)
+    @cachefile ||= {}
+    @cachefile[key] ||= File.join(@root, ".#{key}#{EXT}")
   end
 
   def initialize(root)
-    if OPTS[:reset]
-      Dir[File.join(root, ".*#{EXT}")].each{|f| File.unlink(f)}
-      exit
+    @root = root
+  end
+
+  def reset
+    Dir[File.join(@root, ".*#{EXT}")].each{|f| File.unlink(f)}
+    File.unlink(File.join(@root, EXT)) if File.exists?(File.join(@root, EXT))
+  end
+
+  def index
+    @hashes = File.join(@root, EXT)
+
+    hashes = nil
+    if File.exists?(@hashes)
+      hashes = JSON.parse(File.open(@hashes).read)
+      if hashes['version'] != RELEASE
+        reset
+        hashes = nil
+      end
     end
+    hashes ||= {version: RELEASE, hash: {}}
+    oldhashes = (hashes[:hash] || {}).dup
 
     extensions = []
-    hashes = {}
     errors = []
-    Dir[File.join(root, '*.zip')].sort.each{|zipfile|
+    allwords = []
+    Dir[File.join(@root, '*.zip')].sort.each{|zipfile|
       key = File.basename(zipfile, File.extname(zipfile)).upcase
-      cachefile = File.join(File.dirname(zipfile), ".#{key}#{EXT}")
-      next if File.exists?(cachefile) && File.mtime(cachefile) > File.mtime(zipfile)
-
 
       propfile = File.join(File.dirname(zipfile), File.basename(zipfile, File.extname(zipfile)) + '.prop')
-      hash = nil
-      File.open(propfile){|f| hash = Nokogiri::XML(f).xpath('/properties/hash').inner_text }
-      hash = nil if hash == ''
-      hashes[key] = hash if hash
+      File.open(propfile){|f| hashes[:hash][key] = Nokogiri::XML(f).xpath('/properties/hash').inner_text }
+
+      next if File.exists?(cachefile(key)) && File.mtime(cachefile(key)) > File.mtime(zipfile) && oldhashes[key] == hashes[:hash][key]
 
       data = {text: ''}
 
-      File.unlink(cachefile) if File.exists?(cachefile)
+      File.unlink(cachefile(key)) if File.exists?(cachefile(key))
 
       puts zipfile
       Zip::ZipFile.foreach(zipfile) {|entry|
@@ -124,15 +151,25 @@ class Scanner
 
       data[:chars] = data[:text].length
       data[:words] = text2words(data.delete(:text))
+      allwords << data[:words]
       data[:pages] = data[:metadata]['xmpTPg:NPages'] if data[:metadata] && data[:metadata]['xmpTPg:NPages']
       data.delete(:metadata)
+      data.delete(:chars) if data[:pages]
 
-      File.open(cachefile, "wb", :encoding => 'utf-8'){|f| f.write(data.to_json) } if data[:words].size > 0
+      File.open(cachefile(key), "wb", :encoding => 'utf-8'){|f| f.write(data.to_json) } if data[:words].size > 0
     }
 
-    File.open(File.join(root, EXT), "wb", :encoding => 'utf-8'){|f| f.write(hashes.to_json) }
-    File.open(File.join(root, EXT + '.error'), "wb", :encoding => 'utf-8'){|f| f.write(errors.to_yaml) }
+    File.open(@hashes, "wb", :encoding => 'utf-8'){|f| f.write(hashes.to_json) }
+    File.open(File.join(@root, EXT + '.error'), "wb", :encoding => 'utf-8'){|f| f.write(errors.to_yaml) }
+    File.open(File.join(@root, EXT + '.words'), "wb", :encoding => 'utf-8'){|f| f.write(allwords.flatten.uniq.sort.to_yaml) }
   end
 end
 
-Scanner.new('/var/www/webdav/emile/zotero/')
+scanner = Scanner.new('/var/www/webdav/emile/zotero/')
+
+if OPTS[:reset]
+  scanner.reset
+  exit
+end
+
+scanner.index

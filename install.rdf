@@ -4,7 +4,7 @@
 	<Description about="urn:mozilla:install-manifest">
 		<em:id>offline-index@iris-advies.com</em:id>
 		<em:name>Offline Index Plugin for Zotero</em:name>
-		<em:version>0.0.3</em:version>
+		<em:version>0.0.7</em:version>
 		<em:description>A sample plugin for Zotero</em:description>
 		<em:creator>Center for History and New Media<br/>George Mason University</em:creator>
 		<em:updateUrl>https://raw.github.com/friflaj/zotero-offline-index/master/update.rdf</em:updateUrl>
