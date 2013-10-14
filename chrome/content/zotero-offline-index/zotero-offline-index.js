@@ -15,7 +15,7 @@ Zotero.OfflineIndex = {
       return function ()
       {
         try {
-          getOfflineData();
+          this.getOfflineData();
         } catch (err) {
           Zotero.debug('Error getting remote index: ' + err);
         }
@@ -26,11 +26,13 @@ Zotero.OfflineIndex = {
 
   reset: function()
   {
+    Zotero.debug('Clearing fulltext index');
     Zotero.DB.query('DELETE FROM fulltextWords');
     Zotero.DB.query('DELETE FROM fulltextItemWords');
     Zotero.DB.query('DELETE FROM fulltextItems');
     Zotero.DB.query('DELETE FROM offlineindex.status');
     Zotero.DB.query('DELETE FROM offlineindex.version');
+    Zotero.debug('Fulltext index cleared');
   },
 
   getOfflineData: function()
