@@ -1,10 +1,9 @@
 #!/usr/bin/env ruby
 
-require 'json'
-require 'yaml'
 require 'zip/zipfilesystem'
 require 'tempfile'
 require 'pp'
+require 'json'
 require 'redcarpet'
 require 'nokogiri'
 require 'trollop'
@@ -15,7 +14,8 @@ require 'csv'
 require 'stringex'
 require 'unicode_utils/downcase'
 
-RELEASE = Nokogiri::XML(File.open(File.join(File.dirname(__FILE__), 'install.rdf'))).xpath('//em:version').inner_text
+FORMAT = 'html-json-1'
+
 TIKA = Net::HTTP.new('localhost', 9998)
 
 OPTS = Trollop::options do
@@ -23,7 +23,7 @@ OPTS = Trollop::options do
 end
 
 class Scanner
-  EXT = '.offline.txt'
+  EXT = '.offline.html'
   EXT2MIMETYPE = {
     '.epub' => 'application/epub+zip',
     '.mobi' => 'application/x-mobipocket-ebook',
@@ -61,6 +61,23 @@ class Scanner
     return data
   end
 
+  def serialize(file, data)
+    builder = Nokogiri::HTML::Builder.new(:encoding => 'UTF-8') do |doc|
+      doc.html {
+        doc.head {
+          doc.meta('http-equiv' => 'content-type', 'content' => 'application/xhtml+xml; charset=UTF-8')
+        }
+        doc.body data.to_json
+      }
+    end
+    File.open(file, "wb", :encoding => 'utf-8'){|f|
+      f.write(builder.doc.to_xhtml(:encoding => 'UTF-8'))
+    }
+  end
+  def unserialize(file)
+    return JSON.parse(Nokogiri::HTML(File.open(file, 'rb', :encoding => 'utf-8')).at('//body').text)
+  end
+
   def to_ascii(w)
     @toascii ||= {}
     @toascii[w] ||= w.to_ascii.downcase.gsub(/[^a-z]/, '')
@@ -90,13 +107,13 @@ class Scanner
 
     hashes = nil
     if File.exists?(@hashes)
-      hashes = JSON.parse(File.open(@hashes).read)
-      if hashes['version'] != RELEASE
+      hashes = unserialize(@hashes)
+      if hashes['version'] != FORMAT
         reset
         hashes = nil
       end
     end
-    hashes ||= {version: RELEASE, hash: {}}
+    hashes ||= {version: FORMAT, hash: {}}
     oldhashes = (hashes[:hash] || {}).dup
 
     extensions = []
@@ -156,12 +173,12 @@ class Scanner
       data.delete(:metadata)
       data.delete(:chars) if data[:pages]
 
-      File.open(cachefile(key), "wb", :encoding => 'utf-8'){|f| f.write(data.to_json) } if data[:words].size > 0
+      serialize(cachefile(key), data) unless data[:words].empty?
     }
 
-    File.open(@hashes, "wb", :encoding => 'utf-8'){|f| f.write(hashes.to_json) }
-    File.open(File.join(@root, EXT + '.error'), "wb", :encoding => 'utf-8'){|f| f.write(errors.to_yaml) }
-    File.open(File.join(@root, EXT + '.words'), "wb", :encoding => 'utf-8'){|f| f.write(allwords.flatten.uniq.sort.to_yaml) }
+    serialize(@hashes, hashes)
+    serialize(File.join(@root, EXT + '.error'), errors)
+    serialize(File.join(@root, EXT + '.words'), allwords.flatten.uniq.sort)
   end
 end
 
