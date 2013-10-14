@@ -1,6 +1,6 @@
 <?xml version="1.0"?>
 <RDF:RDF xmlns:RDF="http://www.w3.org/1999/02/22-rdf-syntax-ns#" xmlns:em="http://www.mozilla.org/2004/em-rdf#">
-  <RDF:Description about="urn:mozilla:extension:offline-index@iris-advies.comzotero@chnm.gmu.edu{ec8030f7-c20a-464f-9b0e-13a3a9e97384}zotero@chnm.gmu.edu">
+  <RDF:Description about="urn:mozilla:extension:offline-index@iris-advies.com">
     <em:updates>
       <RDF:Seq>
         <RDF:li>
