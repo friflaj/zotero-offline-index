@@ -13,8 +13,8 @@
 	<menupopup id="zotero-tb-actions-popup">
 		<!-- Make sure the menu separator for utilities is visible -->
 		<menuseparator id="zotero-tb-actions-plugins-separator" hidden="false"/>
-		<menuitem insertbefore="zotero-tb-actions-separator" label="&zotero-offline-index.reset;"
-			oncommand="Zotero.OfflineIndex.reset()"/>
+		<menuitem insertbefore="zotero-tb-actions-separator" label="&zotero-offline-index.reset;" oncommand="Zotero.OfflineIndex.reset()"/>
+		<menuitem insertbefore="zotero-tb-actions-separator" label="&zotero-offline-index.fetch;" oncommand="Zotero.OfflineIndex.fetch()"/>
 	</menupopup>
 	
 	<!-- Include the main extension logic -->
