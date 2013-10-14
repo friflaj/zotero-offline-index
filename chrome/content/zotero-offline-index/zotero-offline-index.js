@@ -6,7 +6,7 @@ Zotero.OfflineIndex = {
     db.query('CREATE TABLE IF NOT EXISTS version (version PRIMARY KEY)');
     db.query('CREATE TABLE IF NOT EXISTS status (itemID NOT NULL, attachmentHash NOT NULL)');
     db.query('CREATE TABLE IF NOT EXISTS fulltextwords (word NOT NULL)');
-    db.close();
+    db.closeDatabase();
     Zotero.DB.query("ATTACH '" + Zotero.getZoteroDatabase(this.DBNAME).path + "' AS 'offlineindex'");
 
     // monkey-patch Zotero.Sync.Runner.stop
@@ -72,7 +72,7 @@ Zotero.OfflineIndex = {
     });
 
     Zotero.Items.getAll().map(function(item){
-      if (!remote[item.key] || remote[item.key] == local[item.key] || !item.isAttachment()) { continue; }
+      if (!remote[item.key] || remote[item.key] == local[item.key] || !item.isAttachment()) { return; }
 
       Zotero.DB.beginTransaction();
       Zotero.DB.query("delete from offlineindex.status where itemID = ?", [item.id]);
@@ -81,7 +81,7 @@ Zotero.OfflineIndex = {
       Zotero.debug('Fetching: ' + url);
 
       try {
-        Zotero.debug('Fetching annotations: ' + url);
+        Zotero.debug('Fetching offline index: ' + url);
         var request = new XMLHttpRequest();
         request.open('GET', url, false, username, password);  // `false` makes the request synchronous
         request.send(null);
@@ -101,8 +101,8 @@ Zotero.OfflineIndex = {
           Zotero.DB.query('REPLACE INTO fulltextItems SET version = 1, indexedPages = ?, totalPages = ?, indexedChars = ?, totalChars = ? WHERE itemID = ?', [data['pages'], data['pages'], data['chars'], data['chars']]);
         }
       } catch(err) {
-        Zotero.debug('Annotation error: ' + err);
-        continue;
+        Zotero.debug('Offline Index error: ' + err);
+        return;
       }
 
       Zotero.DB.query("INSERT INTO offlineindex.status (itemID, attachmentHash) VALUES (?, ?)", [item.id, remote[item.key]]);

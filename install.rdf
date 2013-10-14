@@ -3,11 +3,27 @@
 	
 	<Description about="urn:mozilla:install-manifest">
 		<em:id>offline-index@iris-advies.com</em:id>
-		<em:name>Offline Index Plugin for Zotero</em:name>
-		<em:version>0.0.7</em:version>
-		<em:description>A sample plugin for Zotero</em:description>
-		<em:creator>Center for History and New Media<br/>George Mason University</em:creator>
-		<em:updateUrl>https://raw.github.com/friflaj/zotero-offline-index/master/update.rdf</em:updateUrl>
+		<em:name>Zotero Offline Index Plugin</em:name>
+		<em:version>0.0.8</em:version>
+		<em:description>This plugin fetches pre-calculated indexes from your webdav storage. See associated sample scanner
+            from the <a href="https://github.com/friflaj/zotero-offline-index/">project page</a> to generate the
+            indexes.
+            
+            Pros:
+            <ul>
+              <li>much faster in daily use<li>
+              <li>also shares your indexes over all your indexed PCs<li>
+              <li>indexes non-PDF attachments in addition to PDF attachments (currently .doc/.docx/.html/.mobi/.epub<li>
+              <li>included scanner does a best-effort attempt to translate unicode (accented etc) characters to ASCII, making search easier (both converted and non-converted words included in index)<li>
+            </li>
+            Cons:
+            <ul>
+              <li>only works for webdav-stored attachments
+              <li>setup: offline scanner script requires Ruby, Java and apache Tika
+            </li>
+            </li>
+		<em:creator>Emiliano Heyns</em:creator>
+		<em:updateURL>https://raw.github.com/friflaj/zotero-offline-index/master/update.rdf</em:updateURL>
 		<em:type>2</em:type> <!-- type=extension -->
 		
 		<!-- Requires Zotero -->
@@ -36,5 +52,6 @@
 				<em:maxVersion>4.0.*</em:maxVersion>
 			</Description>
 		</em:targetApplication>
-	</Description>
-</RDF>
+	</ul>
+</li>
+</li></li></li></li></li></li></ul></em:description></Description></RDF>

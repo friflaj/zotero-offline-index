@@ -49,7 +49,7 @@ task :release, :bump do |t, args|
 
   install_rdf = Nokogiri::XML(File.open('install.rdf'))
   install_rdf.at('//em:version').content = release
-  install_rdf.at('//em:updateUrl').content = "https://raw.github.com/friflaj/zotero-#{EXTENSION}/master/update.rdf"
+  install_rdf.at('//em:updateURL').content = "https://raw.github.com/friflaj/zotero-#{EXTENSION}/master/update.rdf"
   File.open('install.rdf','wb') {|f| install_rdf.write_xml_to f}
   puts "Release set to #{release}. Please publish."
 end
